@@ -4,11 +4,14 @@ import cv2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 
+from centerface import CenterFace
+
 
 class Ui_MainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(Ui_MainWindow, self).__init__(parent)
 
+        self.centerface = CenterFace(landmarks=True)
         # 初始化定时器
         self.timer_camera = QtCore.QTimer()
         # 初始化摄像头
@@ -25,9 +28,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # 采用QHBoxLayout类，按照从左到右的顺序来添加控件
         self.__layout_main = QtWidgets.QHBoxLayout()
         self.__layout_fun_button = QtWidgets.QHBoxLayout()
+
+        self.__layout_fun_label = QtWidgets.QHBoxLayout()
         # QVBoxLayout类垂直地摆放小部件
         self.__layout_data_show = QtWidgets.QVBoxLayout()
 
+        # self.name = QtWidgets.QLabel('姓名：')
         self.button_open_camera = QtWidgets.QPushButton(u'开始识别')
         self.button_close = QtWidgets.QPushButton(u'退出')
 
@@ -94,12 +100,18 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # 此处捕获到图片并进行人脸识别
         # 将识别结果返回界面
         # to-do
-
-        print(self.image.shape)
+        h, w = self.image.shape[:2]
+        dets, lms = self.centerface(self.image, h, w, threshold=0.35)
+        # print(self.image.shape)
+        # 方框标出图片上的人脸
+        for det in dets:
+            boxes, score = det[:4], det[4]
+            cv2.rectangle(self.image, (int(boxes[0]), int(boxes[1])),
+                          (int(boxes[2]), int(boxes[3])), (2, 255, 0), 1)
 
         show = cv2.resize(self.image, (640, 480))
         show = cv2.cvtColor(show, cv2.COLOR_BGR2RGB)
-        # 转换为QT可以使用的图片格式
+        # 转换为Qt可以使用的图片格式
         showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0], QtGui.QImage.Format_RGB888)
         # 将图片更新到界面
         self.label_show_camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
