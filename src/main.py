@@ -5,12 +5,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 
 from centerface import CenterFace
-
+from face_alignment import Alignment
+from face_encoder import Encoder
 
 class Ui_MainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(Ui_MainWindow, self).__init__(parent)
 
+        self.align = Alignment()
+        self.encoder = Encoder()
         self.centerface = CenterFace(landmarks=True)
         # 初始化定时器
         self.timer_camera = QtCore.QTimer()
@@ -97,24 +100,33 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def show_camera(self):
         # 捕获图像
         flag, self.image = self.cap.read()
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         # 此处捕获到图片并进行人脸识别
         # 将识别结果返回界面
         # to-do
+
+        # CenterFace人脸检测
         h, w = self.image.shape[:2]
         dets, lms = self.centerface(self.image, h, w, threshold=0.35)
-        # print(self.image.shape)
-        # 方框标出图片上的人脸
+        # 人脸关键点对齐
+        if len(lms) != 0:
+            img = self.align.align_face(self.image, lms)
+            embedding = self.encoder.generate_embedding(img)
+            print(embedding)
+        else:
+            print("not found face")
+        # 方框标出人脸用于展示
         for det in dets:
             boxes, score = det[:4], det[4]
             cv2.rectangle(self.image, (int(boxes[0]), int(boxes[1])),
                           (int(boxes[2]), int(boxes[3])), (2, 255, 0), 1)
-
         show = cv2.resize(self.image, (640, 480))
-        show = cv2.cvtColor(show, cv2.COLOR_BGR2RGB)
+
         # 转换为Qt可以使用的图片格式
         showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0], QtGui.QImage.Format_RGB888)
         # 将图片更新到界面
         self.label_show_camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
+
 
     def closeEvent(self, event):
         ok = QtWidgets.QPushButton()
