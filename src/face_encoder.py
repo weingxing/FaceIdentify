@@ -1,39 +1,20 @@
-import pickle
+# 获取人脸特征向量
 import os
 import cv2
+import time
 import numpy as np
 import tensorflow.compat.v1 as tf
 
 from centerface import CenterFace
-import face_net.src.facenet as facenet
+from load_model import load_model
 
-import time
 
 tf.disable_eager_execution()
 np.set_printoptions(suppress=True)
 gpu_memory_fraction = 0.3
-facenet_model_checkpoint = os.path.abspath("./models/facenet/20180408-102900")
+# 模型路径
+facenet_model_checkpoint = os.path.abspath("./models/facenet/20200507-114759")
 
-class Encoder:
-    def __init__(self):
-        self.dectection= Detection()
-        self.sess = tf.Session()
-        start=time.time()
-        with self.sess.as_default():
-            facenet.load_model(facenet_model_checkpoint)
-        print('Model loading finised,cost: %ds'%((time.time()-start)))
-
-    def generate_embedding(self, image):
-        # Get input and output tensors
-        images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-        embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-        phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-
-        face = self.dectection.find_faces(image)
-        prewhiten_face = facenet.prewhiten(face.image)
-        # Run forward pass to calculate embeddings
-        feed_dict = {images_placeholder: [prewhiten_face], phase_train_placeholder: False}
-        return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
 class Face:
     def __init__(self):
@@ -43,40 +24,20 @@ class Face:
         self.container_image = None
         self.embedding = None
 
-class Detection:
-    # face detection parameters
-    minsize = 20  # minimum size of face
-    threshold = [0.6, 0.7, 0.7]  # three steps's threshold
-    factor = 0.709  # scale factor
 
+class Detection:
     def __init__(self, face_crop_size=160, face_crop_margin=32):
-        # self.pnet, self.rnet, self.onet = self._setup_mtcnn()
         self.face_crop_size = face_crop_size
         self.face_crop_margin = face_crop_margin
 
-    # def _setup_mtcnn(self):
-    #     with tf.Graph().as_default():
-    #         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
-    #         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
-    #         with sess.as_default():
-    #             return face_net.src.align.detect_face.create_mtcnn(sess, None)
-
     def find_faces(self, image):
-        # image = misc.imread(os.path.expanduser(image), mode='RGB')
-        # image = cv2.imread(os.path.expanduser(image))
+        # BGR转为RGB
         image = image[:, :, ::-1]
-
         centerface = CenterFace(landmarks=True)
-        # img = cv2.imread(pic)
-        # BGR 转 RGB
-        # img = img[:, :, ::-1]
         h, w = image.shape[:2]
         bounding_boxes, lms = centerface(image, h, w, threshold=0.35)
 
         faces = []
-        # bounding_boxes, _ = face_net.src.align.detect_face.detect_face(image, self.minsize,
-        #                                                   self.pnet, self.rnet, self.onet,
-        #                                                   self.threshold, self.factor)
 
         for bb in bounding_boxes:
             face = Face()
@@ -88,16 +49,57 @@ class Detection:
             face.bounding_box[1] = np.maximum(bb[1] - self.face_crop_margin / 2, 0)
             face.bounding_box[2] = np.minimum(bb[2] + self.face_crop_margin / 2, img_size[1])
             face.bounding_box[3] = np.minimum(bb[3] + self.face_crop_margin / 2, img_size[0])
-            cropped = image[face.bounding_box[1]:face.bounding_box[3], face.bounding_box[0]:face.bounding_box[2], :]
-            # plt.imshow(cv2.resize(cropped, (160, 160)), interpolation=cv2.INTER_LINEAR)
-            # plt.show()
+            cropped = image[face.bounding_box[1]:face.bounding_box[3],
+                      face.bounding_box[0]:face.bounding_box[2], :]
+
             face.image = cv2.resize(cropped, (160, 160), interpolation=cv2.INTER_LINEAR)
-            # face.image = misc.imresize(cropped, (self.face_crop_size, self.face_crop_size), interp='bilinear')
+
             faces.append(face)
         return faces[0]
 
 
-if __name__=='__main__':
-    pic = './2.jpg'
+class Encoder:
+    def __init__(self):
+        self.detection = Detection()
+        self.sess = tf.Session()
+        start = time.time()
+        with self.sess.as_default():
+            load_model(facenet_model_checkpoint)
+        print('载入模型成功，用时：%ds' % (time.time() - start))
+
+    def prewhiten(self, x):
+        mean = np.mean(x)
+        std = np.std(x)
+        std_adj = np.maximum(std, 1.0 / np.sqrt(x.size))
+        y = np.multiply(np.subtract(x, mean), 1 / std_adj)
+        return y
+
+    def generate_embedding(self, image):
+        # 取得输入层和输出层的张量
+        images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+        embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+        phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+
+        face = self.detection.find_faces(image)
+
+        prewhiten_face = self.prewhiten(face.image)
+        # 前行传播计算特征量
+        feed_dict = {images_placeholder: [prewhiten_face], phase_train_placeholder: False}
+        return self.sess.run(embeddings, feed_dict=feed_dict)[0]
+
+    def distance(emb1, emb2):
+        return np.sum(np.square(emb1 - emb2))
+
+
+if __name__ == '__main__':
+    img1 = cv2.imread('imgs/1.jpg')
+    img2 = cv2.imread('imgs/2.jpg')
+    img3 = cv2.imread('imgs/3.jpg')
     encoder = Encoder()
-    print(encoder.generate_embedding(pic).shape)
+    emb1 = encoder.generate_embedding(img1)
+    emb2 = encoder.generate_embedding(img2)
+    emb3 = encoder.generate_embedding(img3)
+    d1 = distance(emb1, emb2)
+    d2 = distance(emb1, emb3)
+    d3 = distance(emb2, emb3)
+    print(d1, d2, d3)

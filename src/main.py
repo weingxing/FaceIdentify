@@ -1,19 +1,17 @@
 import sys
-
 import cv2
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 
 from centerface import CenterFace
-from face_alignment import Alignment
-from face_encoder import Encoder
+# from face_encoder import Encoder
+
 
 class Ui_MainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(Ui_MainWindow, self).__init__(parent)
 
-        self.align = Alignment()
-        self.encoder = Encoder()
+        # self.encoder = Encoder()
         self.centerface = CenterFace(landmarks=True)
         # 初始化定时器
         self.timer_camera = QtCore.QTimer()
@@ -31,29 +29,22 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # 采用QHBoxLayout类，按照从左到右的顺序来添加控件
         self.__layout_main = QtWidgets.QHBoxLayout()
         self.__layout_fun_button = QtWidgets.QHBoxLayout()
+        self.__layout_name = QtWidgets.QHBoxLayout()
 
         self.__layout_fun_label = QtWidgets.QHBoxLayout()
         # QVBoxLayout类垂直地摆放小部件
         self.__layout_data_show = QtWidgets.QVBoxLayout()
+        self.__layout_info_show = QtWidgets.QVBoxLayout()
 
-        # self.name = QtWidgets.QLabel('姓名：')
+        self.name_label = QtWidgets.QLabel('姓名：')
+        self.name = QtWidgets.QLabel()
         self.button_open_camera = QtWidgets.QPushButton(u'开始识别')
         self.button_close = QtWidgets.QPushButton(u'退出')
-
-        # button颜色修改
-        button_color = [self.button_open_camera, self.button_close]
-        for i in range(2):
-            button_color[i].setStyleSheet("QPushButton{color:black}"
-                                           "QPushButton:hover{color:red}"
-                                           "QPushButton{background-color:rgb(78,255,255)}"
-                                           "QpushButton{border:2px}"
-                                           "QPushButton{border_radius:10px}"
-                                           "QPushButton{padding:2px 4px}")
 
         self.button_open_camera.setMinimumHeight(50)
         self.button_close.setMinimumHeight(50)
 
-        # move()方法是移动窗口在屏幕上的位置到x = 500，y = 200的位置上
+        # 移动窗口在屏幕上的位置到x = 500，y = 200的位置
         self.move(500, 200)
 
         # 信息显示
@@ -68,7 +59,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.__layout_fun_button.addWidget(self.button_close)
         self.__layout_fun_button.addWidget(self.label_move)
 
-        self.__layout_main.addLayout(self.__layout_fun_button)
+        self.__layout_name.addWidget(self.name_label, alignment=QtCore.Qt.AlignRight)
+        self.__layout_name.addWidget(self.name, alignment=QtCore.Qt.AlignLeft)
+        # self.__layout_name.
+        self.name.setText('123')
+
+        self.__layout_info_show.addLayout(self.__layout_name)
+        self.__layout_info_show.addLayout(self.__layout_data_show)
+        self.__layout_info_show.addLayout(self.__layout_fun_button)
+
+        self.__layout_main.addLayout(self.__layout_info_show)
         self.__layout_main.addWidget(self.label_show_camera)
 
         self.setLayout(self.__layout_main)
@@ -101,20 +101,21 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # 捕获图像
         flag, self.image = self.cap.read()
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
-        # 此处捕获到图片并进行人脸识别
-        # 将识别结果返回界面
-        # to-do
-
         # CenterFace人脸检测
         h, w = self.image.shape[:2]
         dets, lms = self.centerface(self.image, h, w, threshold=0.35)
         # 人脸关键点对齐
         if len(lms) != 0:
-            img = self.align.align_face(self.image, lms)
-            embedding = self.encoder.generate_embedding(img)
-            print(embedding)
+            # 提取当前检测到的人脸的特征量
+            # embedding = self.encoder.generate_embedding(self.image)
+            # 获取数据库中的全部特征量
+
+            # 计算距离，选出最小的距离
+
+            # 判断是否小于最大距离，小于则认证成功
+            print(1)
         else:
-            print("not found face")
+            print("没有发现人脸")
         # 方框标出人脸用于展示
         for det in dets:
             boxes, score = det[:4], det[4]
@@ -126,7 +127,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0], QtGui.QImage.Format_RGB888)
         # 将图片更新到界面
         self.label_show_camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
-
 
     def closeEvent(self, event):
         ok = QtWidgets.QPushButton()

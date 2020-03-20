@@ -1,3 +1,4 @@
+# 人脸检测、对齐
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,13 +10,14 @@ class Alignment:
     def __init__(self):
         self.centerface = CenterFace(landmarks=True)
 
-    def align_face(self, img, kye_point):
-        kye_point = kye_point[0]
+    def align_face(self, img):
+        dets, key_point = self.detect(img)
+        key_point = key_point[0]
 
         # 根据两个鼻子和眼睛进行3点对齐
-        eye1 = kye_point[:2]
-        eye2 = kye_point[2:4]
-        noise = kye_point[4:6]
+        eye1 = key_point[:2]
+        eye2 = key_point[2:4]
+        noise = key_point[4:6]
         source_point = np.array([eye1, eye2, noise], dtype=np.float32)
 
         eye1_normal = [int(x) for x in "81, 167".split(',')]
@@ -46,7 +48,6 @@ if __name__ == '__main__':
     img = img[:, :, ::-1]
     h, w = img.shape[:2]
     dets, lms = centerface(img, h, w, threshold=0.35)
-
 
     if len(dets):
         align = Alignment()
