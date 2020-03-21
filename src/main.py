@@ -4,14 +4,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import *
 
 from centerface import CenterFace
-# from face_encoder import Encoder
+from face_recognition import Recognition
+from face_alignment import Alignment
 
 
 class Ui_MainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(Ui_MainWindow, self).__init__(parent)
 
-        # self.encoder = Encoder()
+        self.recognition = Recognition()
+        self.align = Alignment()
         self.centerface = CenterFace(landmarks=True)
         # 初始化定时器
         self.timer_camera = QtCore.QTimer()
@@ -62,7 +64,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.__layout_name.addWidget(self.name_label, alignment=QtCore.Qt.AlignRight)
         self.__layout_name.addWidget(self.name, alignment=QtCore.Qt.AlignLeft)
         # self.__layout_name.
-        self.name.setText('123')
+        self.name.setText('null')
 
         self.__layout_info_show.addLayout(self.__layout_name)
         self.__layout_info_show.addLayout(self.__layout_data_show)
@@ -104,17 +106,19 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # CenterFace人脸检测
         h, w = self.image.shape[:2]
         dets, lms = self.centerface(self.image, h, w, threshold=0.35)
-        # 人脸关键点对齐
+
         if len(lms) != 0:
             # 提取当前检测到的人脸的特征量
-            # embedding = self.encoder.generate_embedding(self.image)
-            # 获取数据库中的全部特征量
-
-            # 计算距离，选出最小的距离
-
-            # 判断是否小于最大距离，小于则认证成功
-            print(1)
+            aligned_img = self.align.align_face(self.image)
+            name, distance = self.recognition.result(self.image)
+            # name, distance = self.recognition.result(aligned_img)
+            print('姓名：%s，距离：%s' % (name, distance))
+            if distance < 1.2:
+                self.name.setText(name)
+            else:
+                self.name.setText("不认识")
         else:
+            self.name.setText('null')
             print("没有发现人脸")
         # 方框标出人脸用于展示
         for det in dets:

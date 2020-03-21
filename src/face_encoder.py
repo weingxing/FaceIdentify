@@ -87,7 +87,7 @@ class Encoder:
         feed_dict = {images_placeholder: [prewhiten_face], phase_train_placeholder: False}
         return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
-    def distance(emb1, emb2):
+    def distance(self, emb1, emb2):
         return np.sum(np.square(emb1 - emb2))
 
 
