@@ -110,8 +110,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         if len(lms) != 0:
             # 提取当前检测到的人脸的特征量
             aligned_img = self.align.align_face(self.image)
-            name, distance = self.recognition.result(self.image)
-            # name, distance = self.recognition.result(aligned_img)
+            # self.image = aligned_img
+            # name, distance = self.recognition.result(self.image)
+            name, distance = self.recognition.result(aligned_img)
             print('姓名：%s，距离：%s' % (name, distance))
             if distance < 1.2:
                 self.name.setText(name)

@@ -25,6 +25,7 @@ class Alignment:
         noise_normal = [int(x) for x in "120, 215".split(',')]
         # 设置的人脸标准模型
         dst_point = np.array([eye1_normal, eye2_normal, noise_normal], dtype=np.float32)
+        print(dst_point)
 
         transform = cv2.getAffineTransform(source_point, dst_point)
 
