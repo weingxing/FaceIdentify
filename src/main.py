@@ -17,9 +17,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.centerface = CenterFace(landmarks=True)
         # 初始化定时器
         self.timer_camera = QtCore.QTimer()
+        self.recognition_timer = QtCore.QTimer()
         # 初始化摄像头
         self.cap = cv2.VideoCapture()
-        self.CAM_NUM = 0
+        self.CAM_NUM = 1
+        self.FPS = 5
         self.set_ui()
         self.slot_init()
         self.__flag_work = 0
@@ -81,32 +83,31 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def slot_init(self):
         self.button_open_camera.clicked.connect(self.button_open_camera_click)
         self.timer_camera.timeout.connect(self.show_camera)
+        self.recognition_timer.timeout.connect(self.identify)
         self.button_close.clicked.connect(self.close)
 
     def button_open_camera_click(self):
-        if self.timer_camera.isActive() == False:
+        if not self.timer_camera.isActive():
             flag = self.cap.open(self.CAM_NUM)
-            if flag == False:
+            if not flag:
                 msg = QtWidgets.QMessageBox.Warning(self, u'Warning', u'请检查摄像头是否正常',
                                                     buttons=QtWidgets.QMessageBox.Ok,
                                                     defaultButton=QtWidgets.QMessageBox.Ok)
             else:
-                self.timer_camera.start(30)
+                self.timer_camera.start(60)
+                self.recognition_timer.start(1000)
                 self.button_open_camera.setText(u'结束识别')
         else:
             self.timer_camera.stop()
+            self.recognition_timer.stop()
             self.cap.release()
             self.label_show_camera.clear()
             self.button_open_camera.setText(u'开始识别')
 
-    def show_camera(self):
-        # 捕获图像
-        flag, self.image = self.cap.read()
-        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
-        # CenterFace人脸检测
+    # 识别身份
+    def identify(self):
         h, w = self.image.shape[:2]
         dets, lms = self.centerface(self.image, h, w, threshold=0.35)
-
         if len(lms) != 0:
             # 提取当前检测到的人脸的特征量
             aligned_img = self.align.align_face(self.image)
@@ -120,8 +121,20 @@ class Ui_MainWindow(QtWidgets.QWidget):
         else:
             self.name.setText('没有发现人脸')
             print("没有发现人脸")
+
+    # 检测人脸
+    def show_camera(self):
+        # 捕获图像
+        flag, self.image = self.cap.read()
+        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+        # CenterFace人脸检测
+        h, w = self.image.shape[:2]
+        dets, lms = self.centerface(self.image, h, w, threshold=0.35)
+
         # 方框标出人脸用于展示
-        for det in dets:
+        # 只取距离摄像头最近的作为识别对象
+        if len(dets) != 0:
+            det = dets[0]
             boxes, score = det[:4], det[4]
             cv2.rectangle(self.image, (int(boxes[0]), int(boxes[1])),
                           (int(boxes[2]), int(boxes[3])), (2, 255, 0), 1)
