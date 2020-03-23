@@ -8,10 +8,10 @@ from face_recognition import Recognition
 from face_alignment import Alignment
 
 
-class Ui_MainWindow(QtWidgets.QWidget):
+class MainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        super(Ui_MainWindow, self).__init__(parent)
-
+        super(MainWindow, self).__init__(parent)
+        # 初始化人脸识别、对齐、检测
         self.recognition = Recognition()
         self.align = Alignment()
         self.centerface = CenterFace(landmarks=True)
@@ -21,24 +21,19 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # 初始化摄像头
         self.cap = cv2.VideoCapture()
         self.CAM_NUM = 1
-        self.FPS = 5
+        # 初始化界面、连接槽函数
         self.set_ui()
         self.slot_init()
-        self.__flag_work = 0
-        self.x = 0
-        self.count = 0
         self.image = None
 
     def set_ui(self):
         # 采用QHBoxLayout类，按照从左到右的顺序来添加控件
-        self.__layout_main = QtWidgets.QHBoxLayout()
-        self.__layout_fun_button = QtWidgets.QHBoxLayout()
-        self.__layout_name = QtWidgets.QHBoxLayout()
+        self.layout_main = QtWidgets.QHBoxLayout()
+        self.layout_fun_button = QtWidgets.QHBoxLayout()
+        self.layout_name = QtWidgets.QHBoxLayout()
 
-        self.__layout_fun_label = QtWidgets.QHBoxLayout()
         # QVBoxLayout类垂直地摆放小部件
-        self.__layout_data_show = QtWidgets.QVBoxLayout()
-        self.__layout_info_show = QtWidgets.QVBoxLayout()
+        self.layout_left = QtWidgets.QVBoxLayout()
 
         self.name_label = QtWidgets.QLabel('姓名：')
         self.name = QtWidgets.QLabel()
@@ -53,30 +48,24 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         # 信息显示
         self.label_show_camera = QtWidgets.QLabel()
-        self.label_move = QtWidgets.QLabel()
-        self.label_move.setFixedSize(100, 100)
 
         self.label_show_camera.setFixedSize(641, 481)
         self.label_show_camera.setAutoFillBackground(False)
 
-        self.__layout_fun_button.addWidget(self.button_open_camera)
-        self.__layout_fun_button.addWidget(self.button_close)
-        self.__layout_fun_button.addWidget(self.label_move)
+        self.layout_fun_button.addWidget(self.button_open_camera)
+        self.layout_fun_button.addWidget(self.button_close)
 
-        self.__layout_name.addWidget(self.name_label, alignment=QtCore.Qt.AlignRight)
-        self.__layout_name.addWidget(self.name, alignment=QtCore.Qt.AlignLeft)
-        # self.__layout_name.
-        self.name.setText('null')
+        self.layout_name.addWidget(self.name_label, alignment=QtCore.Qt.AlignRight)
+        self.layout_name.addWidget(self.name, alignment=QtCore.Qt.AlignLeft)
+        self.name.setText('未开始识别')
 
-        self.__layout_info_show.addLayout(self.__layout_name)
-        self.__layout_info_show.addLayout(self.__layout_data_show)
-        self.__layout_info_show.addLayout(self.__layout_fun_button)
+        self.layout_left.addLayout(self.layout_name)
+        self.layout_left.addLayout(self.layout_fun_button)
 
-        self.__layout_main.addLayout(self.__layout_info_show)
-        self.__layout_main.addWidget(self.label_show_camera)
+        self.layout_main.addLayout(self.layout_left)
+        self.layout_main.addWidget(self.label_show_camera)
 
-        self.setLayout(self.__layout_main)
-        self.label_move.raise_()
+        self.setLayout(self.layout_main)
         self.setWindowTitle(u'人脸识别')
 
     # 建立通信连接
@@ -89,19 +78,18 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def button_open_camera_click(self):
         if not self.timer_camera.isActive():
             flag = self.cap.open(self.CAM_NUM)
-            if not flag:
-                msg = QtWidgets.QMessageBox.Warning(self, u'Warning', u'请检查摄像头是否正常',
-                                                    buttons=QtWidgets.QMessageBox.Ok,
-                                                    defaultButton=QtWidgets.QMessageBox.Ok)
-            else:
+            if flag:
                 self.timer_camera.start(60)
                 self.recognition_timer.start(1000)
                 self.button_open_camera.setText(u'结束识别')
+            else:
+                print('请检查摄像头连接')
         else:
             self.timer_camera.stop()
             self.recognition_timer.stop()
             self.cap.release()
             self.label_show_camera.clear()
+            self.name.setText('未开始识别')
             self.button_open_camera.setText(u'开始识别')
 
     # 识别身份
@@ -141,9 +129,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         show = cv2.resize(self.image, (640, 480))
 
         # 转换为Qt可以使用的图片格式
-        showImage = QtGui.QImage(show.data, show.shape[1], show.shape[0], QtGui.QImage.Format_RGB888)
+        show_image = QtGui.QImage(show.data, show.shape[1], show.shape[0], QtGui.QImage.Format_RGB888)
         # 将图片更新到界面
-        self.label_show_camera.setPixmap(QtGui.QPixmap.fromImage(showImage))
+        self.label_show_camera.setPixmap(QtGui.QPixmap.fromImage(show_image))
 
     def closeEvent(self, event):
         ok = QtWidgets.QPushButton()
@@ -165,6 +153,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
 if __name__ == '__main__':
     App = QApplication(sys.argv)
-    win = Ui_MainWindow()
-    win.show()
+    window = MainWindow()
+    window.show()
     sys.exit(App.exec_())
