@@ -110,16 +110,15 @@ class Ui_MainWindow(QtWidgets.QWidget):
         if len(lms) != 0:
             # 提取当前检测到的人脸的特征量
             aligned_img = self.align.align_face(self.image)
-            # self.image = aligned_img
             # name, distance = self.recognition.result(self.image)
             name, distance = self.recognition.result(aligned_img)
             print('姓名：%s，距离：%s' % (name, distance))
-            if distance < 1.2:
+            if distance < 0.9:
                 self.name.setText(name)
             else:
                 self.name.setText("不认识")
         else:
-            self.name.setText('null')
+            self.name.setText('没有发现人脸')
             print("没有发现人脸")
         # 方框标出人脸用于展示
         for det in dets:
