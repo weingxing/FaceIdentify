@@ -33,7 +33,6 @@ class Recognition:
     def result(self, img):
         emb = self.encoder.generate_embedding(img)
         name, face_ids = self.get_embs()
-        print(len(face_ids))
         distance = self.get_distance(emb, face_ids)
         index = np.argmin(distance)
         return name[index], distance[index]

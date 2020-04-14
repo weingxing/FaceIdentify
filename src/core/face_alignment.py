@@ -23,8 +23,9 @@ class Alignment:
             [62.72990036, 92.20410156]
         ], np.float32)
 
-    def align_face(self, img):
-        box, landmarks = self.detect(img)
+    def align_face(self, image):
+        box, landmarks = self.detect(image)
+        # 如果有多个人，取其中一个，忽略其他人
         landmarks = landmarks[0]
         tmp = []
         i = 0
@@ -36,15 +37,15 @@ class Alignment:
         source_point = np.array(tmp, np.float32)
         similar_trans_matrix = self.get_dist_point(source_point, self.REFERENCE_FACIAL_POINTS)
         # 仿射变换
-        aligned_face = cv2.warpAffine(img, similar_trans_matrix, (112, 112))
+        aligned_face = cv2.warpAffine(image, similar_trans_matrix, (112, 112))
         # 调整大小
         aligned_face = cv2.resize(aligned_face, (160, 160))
         return aligned_face
 
     # 检测人脸
-    def detect(self, img):
-        h, w = img.shape[:2]
-        dets, lms = self.centerface(img, h, w, threshold=0.35)
+    def detect(self, image):
+        high, width = image.shape[:2]
+        dets, lms = self.centerface(image, high, width, threshold=0.35)
         return dets, lms
 
     # 获取目标坐标

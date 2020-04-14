@@ -18,7 +18,7 @@ CAM_NUM = 0
 class FirstWindow(MainWindow):
     def __init__(self):
         super().__init__()
-        # 阈值，人脸最大距离
+        # 人脸识别最大距离
         self.threshold = 0.9
         self.cap = cv2.VideoCapture()
         self.centerface = CenterFace(landmarks=True)
@@ -74,17 +74,19 @@ class FirstWindow(MainWindow):
         flag, self.image = self.cap.read()
         self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         # CenterFace人脸检测
-        h, w = self.image.shape[:2]
-        dets, lms = self.centerface(self.image, h, w, threshold=0.35)
+        # 对副本进行修改
+        image = self.image.copy()
+        h, w = image.shape[:2]
+        dets, lms = self.centerface(image, h, w, threshold=0.35)
 
         # 方框标出人脸用于展示
         # 只取距离摄像头最近的作为识别对象
         if len(dets) != 0:
             det = dets[0]
             boxes, score = det[:4], det[4]
-            cv2.rectangle(self.image, (int(boxes[0]), int(boxes[1])),
+            cv2.rectangle(image, (int(boxes[0]), int(boxes[1])),
                           (int(boxes[2]), int(boxes[3])), (2, 255, 0), 1)
-        show = cv2.resize(self.image, (640, 480))
+        show = cv2.resize(image, (640, 480))
 
         # 转换为Qt可以使用的图片格式
         show_image = QtGui.QImage(show.data, show.shape[1], show.shape[0], QtGui.QImage.Format_RGB888)
