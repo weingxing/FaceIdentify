@@ -1,3 +1,3 @@
 # FaceIdentify
 
-人脸识别GUI
+基于FaceNet和CenterFace实现的人脸识别

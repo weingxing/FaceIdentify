@@ -1,7 +1,7 @@
 import numpy as np
 
 from face_db import FaceDB
-from face_encoder import Encoder
+from core.face_encoder import Encoder
 
 
 class Recognition:
@@ -33,6 +33,10 @@ class Recognition:
     def result(self, img):
         emb = self.encoder.generate_embedding(img)
         name, face_ids = self.get_embs()
+        print(len(face_ids))
         distance = self.get_distance(emb, face_ids)
         index = np.argmin(distance)
         return name[index], distance[index]
+
+    def generate_face_id(self, image):
+        return self.encoder.generate_embedding(image)

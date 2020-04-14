@@ -1,12 +1,14 @@
 import os
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 import re
 from tensorflow.python.platform import gfile
 
 
 def load_model(model, input_map=None):
     model_exp = os.path.expanduser(model)
+    print()
     if os.path.isfile(model_exp):
+        print('PB文件：%s' % model_exp)
         with gfile.FastGFile(model_exp, 'rb') as f:
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())
@@ -18,7 +20,8 @@ def load_model(model, input_map=None):
         print('Checkpoint文件名：%s' % ckpt_file)
         print('载入模型中...')
 
-        saver = tf.train.import_meta_graph(os.path.join(model_exp, meta_file), input_map=input_map)
+        saver = tf.train.import_meta_graph(os.path.join(model_exp, meta_file),
+                                           input_map=input_map)
         saver.restore(tf.get_default_session(), os.path.join(model_exp, ckpt_file))
 
 

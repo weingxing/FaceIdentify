@@ -1,52 +1,9 @@
-# 主要的思路就是创建两个frame（如果有两个以上同理）使用setVisible()函数显示或者隐藏frame
-# 参数是bool值<br>import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-import sys
+import tensorflow as tf
+from tensorflow.python.platform import gfile
 
-class logindialog(QDialog):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setWindowTitle('登录界面')
-        self.resize(200, 200)
-        self.setFixedSize(self.width(), self.height())
-        self.setWindowFlags(Qt.WindowCloseButtonHint)
-
-        self.frame = QFrame(self)
-        self.verticalLayout = QVBoxLayout(self.frame)
-        self.lineEdit_account = QLineEdit()
-        self.lineEdit_account.setPlaceholderText("请输入账号")
-        self.verticalLayout.addWidget(self.lineEdit_account)
-
-        self.lineEdit_password = QLineEdit()
-        self.lineEdit_password.setPlaceholderText("请输入密码")
-        self.verticalLayout.addWidget(self.lineEdit_password)
-
-        self.pushButton_enter = QPushButton()
-        self.pushButton_enter.setText("进入下一个界面")
-        self.verticalLayout.addWidget(self.pushButton_enter)
-
-        self.frame1 = QFrame(self)
-        self.verticalLayout = QVBoxLayout(self.frame1)
-        self.pushButton_quit = QPushButton()
-        self.pushButton_quit.setText("回到主页面")
-        self.verticalLayout.addWidget(self.pushButton_quit)
-        self.frame1.setVisible(False)
-        self.pushButton_enter.clicked.connect(self.on_pushButton_enter_clicked)
-        self.pushButton_quit.clicked.connect(self.on_pushButton_enter_clicked_1)
-
-    def on_pushButton_enter_clicked(self):
-        self.frame1.setVisible(True)
-        self.frame.setVisible(False)
-
-    def on_pushButton_enter_clicked_1(self):
-        self.frame1.setVisible(False)
-        self.frame.setVisible(True)
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    dialog = logindialog()
-    if dialog.exec_() == QDialog.Accepted:
-        sys.exit(app.exec_())
+model = 'models/core/20200507-114759/facenet.pb'
+graph = tf.get_default_graph()
+graph_def = graph.as_graph_def()
+graph_def.ParseFromString(gfile.FastGFile(model, 'rb').read())
+tf.import_graph_def(graph_def, name='graph')
+summaryWriter = tf.summary.FileWriter('log/', graph)

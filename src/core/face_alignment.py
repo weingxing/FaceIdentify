@@ -1,11 +1,10 @@
-# 人脸检测、对齐
 import cv2
 import numpy as np
-from numpy.linalg import inv, norm, lstsq
+from numpy.linalg import inv, lstsq
 from numpy.linalg import matrix_rank as rank
 import matplotlib.pyplot as plt
 
-from centerface import CenterFace
+from core.centerface import CenterFace
 
 # 压制警告
 from warnings import simplefilter
@@ -15,6 +14,7 @@ simplefilter(action='ignore', category=FutureWarning)
 class Alignment:
     def __init__(self):
         self.centerface = CenterFace(landmarks=True)
+        # 参考点坐标
         self.REFERENCE_FACIAL_POINTS = np.array([
             [30.29459953, 51.69630051],
             [65.53179932, 51.50139999],
@@ -35,16 +35,19 @@ class Alignment:
         # 眼睛、鼻子、嘴巴 共五个关键点
         source_point = np.array(tmp, np.float32)
         similar_trans_matrix = self.get_dist_point(source_point, self.REFERENCE_FACIAL_POINTS)
+        # 仿射变换
         aligned_face = cv2.warpAffine(img, similar_trans_matrix, (112, 112))
+        # 调整大小
         aligned_face = cv2.resize(aligned_face, (160, 160))
-
         return aligned_face
 
+    # 检测人脸
     def detect(self, img):
         h, w = img.shape[:2]
         dets, lms = self.centerface(img, h, w, threshold=0.35)
         return dets, lms
 
+    # 获取目标坐标
     def get_dist_point(self, uv, xy, K=2):
         M = xy.shape[0]
         x = xy[:, 0].reshape((-1, 1))

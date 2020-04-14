@@ -3,17 +3,18 @@ import os
 import cv2
 import time
 import numpy as np
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 
-from centerface import CenterFace
-from load_model import load_model
+from core.centerface import CenterFace
+from core.load_model import load_model
 
 
-tf.disable_eager_execution()
-np.set_printoptions(suppress=True)
-gpu_memory_fraction = 0.3
 # 模型路径
-facenet_model_checkpoint = os.path.abspath("./models/facenet/20200507-114759")
+# facenet_model_checkpoint = os.path.abspath("./core/models/facenet.pb")
+facenet_model_checkpoint = os.path.\
+    abspath("./core/models/facenet/facenet.pb")
+# 预训练模型
+# facenet_model_checkpoint = os.path.abspath("G:\\facenet_pretrained\\20180408-102900.pb")
 
 
 class Face:
@@ -92,14 +93,14 @@ class Encoder:
 
 
 if __name__ == '__main__':
-    img1 = cv2.imread('imgs/1.jpg')
-    img2 = cv2.imread('imgs/2.jpg')
-    img3 = cv2.imread('imgs/3.jpg')
+    img1 = cv2.imread('../imgs/1.jpg')
+    img2 = cv2.imread('../imgs/2.jpg')
+    img3 = cv2.imread('../imgs/3.jpg')
     encoder = Encoder()
     emb1 = encoder.generate_embedding(img1)
     emb2 = encoder.generate_embedding(img2)
     emb3 = encoder.generate_embedding(img3)
-    d1 = distance(emb1, emb2)
-    d2 = distance(emb1, emb3)
-    d3 = distance(emb2, emb3)
+    d1 = encoder.distance(emb1, emb2)
+    d2 = encoder.distance(emb1, emb3)
+    d3 = encoder.distance(emb2, emb3)
     print(d1, d2, d3)

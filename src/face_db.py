@@ -11,7 +11,6 @@ class FaceDB:
     def get_all_faces(self):
         self.cursor.execute("SELECT name, face_id FROM face")
         result = self.cursor.fetchall()
-        # print(result)
         return result
 
     def insert_face(self, name, face_id):
@@ -23,4 +22,5 @@ class FaceDB:
 
 if __name__ == '__main__':
     db = FaceDB()
-    db.get_all_faces()
+    for i in db.get_all_faces():
+        print(i)
