@@ -24,29 +24,36 @@ class Alignment:
         ], np.float32)
 
     def align_face(self, image):
-        box, landmarks = self.detect(image)
-        # 如果有多个人，取其中一个，忽略其他人
-        landmarks = landmarks[0]
-        tmp = []
-        i = 0
-        while i < len(landmarks):
-            tmp.append([landmarks[i], landmarks[i + 1]])
-            i = i + 2
+        try:
+            box, landmarks = self.detect(image)
+            # 如果有多个人，取其中一个，忽略其他人
+            landmarks = landmarks[0]
+            tmp = []
+            i = 0
+            while i < len(landmarks):
+                tmp.append([landmarks[i], landmarks[i + 1]])
+                i = i + 2
 
-        # 眼睛、鼻子、嘴巴 共五个关键点
-        source_point = np.array(tmp, np.float32)
-        similar_trans_matrix = self.get_dist_point(source_point, self.REFERENCE_FACIAL_POINTS)
-        # 仿射变换
-        aligned_face = cv2.warpAffine(image, similar_trans_matrix, (112, 112))
-        # 调整大小
-        aligned_face = cv2.resize(aligned_face, (160, 160))
-        return aligned_face
+            # 眼睛、鼻子、嘴巴 共五个关键点
+            source_point = np.array(tmp, np.float32)
+            similar_trans_matrix = self.get_dist_point(source_point, self.REFERENCE_FACIAL_POINTS)
+            # 仿射变换
+            aligned_face = cv2.warpAffine(image, similar_trans_matrix, (112, 112))
+            # 调整大小
+            aligned_face = cv2.resize(aligned_face, (160, 160))
+            return aligned_face
+        except TypeError:
+            print('没有发现人脸')
+            return None
 
     # 检测人脸
     def detect(self, image):
         high, width = image.shape[:2]
-        dets, lms = self.centerface(image, high, width, threshold=0.35)
-        return dets, lms
+        dets, lms = self.centerface(image, high, width, threshold=0.4)
+        if len(dets) > 0:
+            return dets, lms
+        else:
+            return None, None
 
     # 获取目标坐标
     def get_dist_point(self, uv, xy, K=2):

@@ -4,6 +4,7 @@ import cv2
 import time
 import numpy as np
 import tensorflow as tf
+import math
 
 from core.load_model import load_model
 
@@ -28,6 +29,7 @@ class Encoder:
         std = np.std(x)
         std_adj = np.maximum(std, 1.0 / np.sqrt(x.size))
         y = np.multiply(np.subtract(x, mean), 1 / std_adj)
+        # y = self.sess.run(tf.image.per_image_standardization(x))
         return y
 
     def generate_embedding(self, image):
@@ -42,7 +44,10 @@ class Encoder:
         return self.sess.run(embeddings, feed_dict=feed_dict)[0]
 
     def distance(self, emb1, emb2):
-        return np.sum(np.square(emb1 - emb2))
+        # diff = np.subtract(emb1, emb2)
+        # dist = np.sum(np.square(diff), 1)
+        dist = np.sum(np.square(emb1 - emb2))
+        return dist
 
 
 if __name__ == '__main__':
