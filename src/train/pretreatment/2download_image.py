@@ -8,6 +8,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
 
+
 # 获取百度图片下载图片
 def download_image(key_word, download_max):
     download_sum = 0
@@ -72,11 +73,11 @@ if __name__ == '__main__':
 
     # 爬取完成邮件通知
     msg_from = 'oxygen@mapletown.xyz'
-    passwd = '这是密码'
+    passwd = 'WXiopjkl5.0'
     msg_to = '2451809588@qq.com'
 
     subject = "数据爬取完成"
-    content = "数据爬取完成, 可以下载了"
+    content = "数据爬取完成"
     
     msg = MIMEText(content)
     msg['Subject'] = subject

@@ -4,13 +4,12 @@ import cv2
 import time
 import numpy as np
 import tensorflow as tf
-import math
 
 from core.load_model import load_model
 
 # 模型路径
-# facenet_model_checkpoint = os.path.abspath("./core/models/facenet.pb")
-facenet_model_checkpoint = os.path.abspath("./core/models/facenet/facenet.pb")
+facenet_model_checkpoint = os.path.abspath("G:/facenet.pb")
+# facenet_model_checkpoint = os.path.abspath("./models/facenet/facenet.pb")
 # 预训练模型
 # facenet_model_checkpoint = os.path.abspath("G:\\facenet_pretrained\\20180408-102900.pb")
 
@@ -51,14 +50,19 @@ class Encoder:
 
 
 if __name__ == '__main__':
-    img1 = cv2.imread('../image/1.jpg')
-    img2 = cv2.imread('../image/2.jpg')
-    img3 = cv2.imread('../image/3.jpg')
+    from core.face_alignment import Alignment
+    os.chdir('../')
+    align = Alignment()
+    img1 = cv2.imread('./images/1.jpg')
+    img2 = cv2.imread('./images/2.jpg')
+    # img1 = cv2.imread('./images/3.png')
+    # img2 = cv2.imread('./images/4.png')
+    # img3 = cv2.imread('../images/3.jpg')
     encoder = Encoder()
-    emb1 = encoder.generate_embedding(img1)
-    emb2 = encoder.generate_embedding(img2)
-    emb3 = encoder.generate_embedding(img3)
+    emb1 = encoder.generate_embedding(align.align_face(img1))
+    emb2 = encoder.generate_embedding(align.align_face(img2))
+    # emb3 = encoder.generate_embedding(img3)
     d1 = encoder.distance(emb1, emb2)
-    d2 = encoder.distance(emb1, emb3)
-    d3 = encoder.distance(emb2, emb3)
-    print(d1, d2, d3)
+    # d2 = encoder.distance(emb1, emb3)
+    # d3 = encoder.distance(emb2, emb3)
+    print(d1)

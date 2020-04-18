@@ -12,7 +12,7 @@ from core.face_alignment import Alignment
 
 recognition = Recognition()
 align = Alignment()
-CAM_NUM = 0
+CAM_NUM = 1
 
 
 class FirstWindow(MainWindow):

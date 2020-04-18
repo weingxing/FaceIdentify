@@ -1,13 +1,14 @@
 # 对图像进行裁剪，将图片转化为 只包含人脸的 160*160 大小的图像
 import os
 import numpy as np
-import core
 import random
 from time import sleep
 from core.centerface import CenterFace
 import cv2
 from numpy.linalg import inv, lstsq
 from numpy.linalg import matrix_rank as rank
+
+os.chdir('../../')
 
 REFERENCE_FACIAL_POINTS = np.array([
     [30.29459953, 51.69630051],
@@ -18,6 +19,42 @@ REFERENCE_FACIAL_POINTS = np.array([
 ], np.float32)
 
 
+class ImageClass():
+    def __init__(self, name, image_paths):
+        self.name = name
+        self.image_paths = image_paths
+
+    def __str__(self):
+        return self.name + ', ' + str(len(self.image_paths)) + ' images'
+
+    def __len__(self):
+        return len(self.image_paths)
+
+
+def get_image_paths(facedir):
+    image_paths = []
+    if os.path.isdir(facedir):
+        images = os.listdir(facedir)
+        image_paths = [os.path.join(facedir,img) for img in images]
+    return image_paths
+
+
+def get_dataset(path, has_class_directories=True):
+    dataset = []
+    path_exp = os.path.expanduser(path)
+    classes = [path for path in os.listdir(path_exp) \
+               if os.path.isdir(os.path.join(path_exp, path))]
+    classes.sort()
+    nrof_classes = len(classes)
+    for i in range(nrof_classes):
+        class_name = classes[i]
+        facedir = os.path.join(path_exp, class_name)
+        image_paths = get_image_paths(facedir)
+        dataset.append(ImageClass(class_name, image_paths))
+
+    return dataset
+
+
 def main(args):
     sleep(random.random())
     output_dir = os.path.expanduser(args['output_dir'])
@@ -25,7 +62,7 @@ def main(args):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    dataset = core.get_dataset(args['input_dir'])
+    dataset = get_dataset(args['input_dir'])
     images_total = 0
     successfully_aligned = 0
     # 打乱数据
@@ -124,9 +161,9 @@ def get_dist_point(uv, xy, K=2):
 if __name__ == '__main__':
     args = {
         # 输入路径
-        'input_dir': 'G:\\lfw',
+        'input_dir': 'G:\\lfw\lfw',
         # 输出路径
-        'output_dir': 'G:\\lfw_160',
+        'output_dir': 'G:\\data',
         # 图片大小
         'image_size': 160,
         # 随机选取

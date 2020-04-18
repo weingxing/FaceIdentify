@@ -8,8 +8,8 @@ reconition = Recognition()
 alignment = Alignment()
 
 if __name__ == '__main__':
-    path = 'C:\\Users\\24518\\Desktop\\123.jpg'
+    path = 'C:\\Users\\24518\\Desktop\\19.jpg'
     image = cv2.imread(path)
     image = image[:, :, ::-1]
     image = alignment.align_face(image)
-    reconition.add_to_db('刘涛', image)
+    reconition.add_to_db('giao哥', image)

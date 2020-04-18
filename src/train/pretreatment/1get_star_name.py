@@ -1,5 +1,7 @@
 import json
 import requests
+import time
+import random
 
 
 f = open('star_name.txt', 'w', encoding='utf-8')
@@ -27,25 +29,23 @@ def get_page(pages, star_name):
             'rn': 12})
 
     url = 'https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php'
-
     x = 0
-
     for param in params:
         try:
             res = requests.get(url, params=param, timeout=50)
             js = json.loads(res.text)
+            print(js)
             results = js.get('data')[0].get('result')
         except AttributeError as e:
             print('【错误】出现错误：%s' % e)
             continue
-
         # 从json中提取明星的名字
         for result in results:
             img_name = result['ename']
             f.write(img_name + '\n',)
-
         if x % 10 == 0:
             print('第%d页......' % x)
+        time.sleep(random.randint(1, 3))
         x += 1
 
 

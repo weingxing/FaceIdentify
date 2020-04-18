@@ -3,8 +3,9 @@ import shutil
 import cv2
 import gc
 import numpy as np
-from centerface import CenterFace
+from core.centerface import CenterFace
 
+os.chdir('../../')
 
 # 删除两个人脸以上的图片或者没有人脸的图片
 def delete_image(image_path):

@@ -78,7 +78,7 @@ def freeze_graph_def(sess, input_graph_def, output_node_names):
 
 if __name__ == '__main__':
     args = {
-        'model_dir': './2',
-        'output_file': 'facenet.pb'
+        'model_dir': 'G:/1',
+        'output_file': 'G:/facenet.pb'
     }
     main(args)
