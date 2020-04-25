@@ -161,9 +161,9 @@ def get_dist_point(uv, xy, K=2):
 if __name__ == '__main__':
     args = {
         # 输入路径
-        'input_dir': 'G:\\lfw\lfw',
+        'input_dir': 'G:\\data1',
         # 输出路径
-        'output_dir': 'G:\\data',
+        'output_dir': 'G:\\3\\data',
         # 图片大小
         'image_size': 160,
         # 随机选取

@@ -78,7 +78,7 @@ def freeze_graph_def(sess, input_graph_def, output_node_names):
 
 if __name__ == '__main__':
     args = {
-        'model_dir': 'G:/1',
-        'output_file': 'G:/facenet.pb'
+        'model_dir': 'C:\\Users\\24518\\Desktop\\20200425-123613',
+        'output_file': 'G:/f5.pb'
     }
     main(args)

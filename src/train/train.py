@@ -2,6 +2,7 @@ from datetime import datetime
 import os.path
 import time
 import sys
+from random import shuffle
 import tensorflow as tf
 import numpy as np
 import importlib
@@ -48,6 +49,7 @@ def main(args):
         print('LFW目录: %s' % args['lfw_dir'])
         # 读取用于测试的pairs文件
         pairs = lfw.read_pairs(os.path.expanduser(args['lfw_pairs']))
+        shuffle(pairs)
         # 获取对应的路径
         lfw_paths, actual_issame = lfw.get_paths(os.path.expanduser(args['lfw_dir']),
                                                  pairs, args['lfw_file_ext'])
@@ -470,16 +472,16 @@ def get_learning_rate_from_file(filename, epoch):
 if __name__ == '__main__':
     args = {
         # 日志目录
-        'logs_base_dir': './logs/facenet',
+        'logs_base_dir': './logs',
         # 模型目录
-        'models_base_dir': './models/facenet',
+        'models_base_dir': './models',
         # GPU显存占用比例
         'gpu_memory_fraction': 0.75,
         # 预训练模型目录
         'pretrained_model': '',
         # 对齐后的数据路径（训练集）
         'data_dir': './data',
-        # 网络模型（模块.名称）（models目录下的inception_resnet_v1.py）
+        # 网络模型（模块.名称）（inception_resnet_v1.py）
         'model_def': 'inception_resnet_v1',
         # epoch
         'max_nrof_epochs': 500,
@@ -496,7 +498,7 @@ if __name__ == '__main__':
         # 正三元组到负三元组的边距
         'alpha': 0.2,
         # 特征向量维度
-        'embedding_size': 512,
+        'embedding_size': 128,
         # 对训练图像执行随机水平翻转
         'random_flip': True,
         # 全连接层的保留概率
@@ -508,7 +510,7 @@ if __name__ == '__main__':
         # 学习率
         # 如果设为负值，可以在学习率计划文件中
         # 指定每个epoch的学习率
-        'learning_rate': 0.1,
+        'learning_rate': -1,
         # 包含将learning_rate设置为负数时使用的学习率计划文件
         'learning_rate_schedule_file': './learning_rates.txt',
         # 学习率衰减之间的epoch数

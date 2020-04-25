@@ -9,33 +9,29 @@ class Recognition:
         self.db = FaceDB()
         self.encoder = Encoder()
 
-    def add_to_db(self, name, image):
-        emb = self.encoder.generate_embedding(image)
-        face_id = emb.tostring()
+    def add_face(self, name, image):
+        features = self.encoder.generate_features(image)
+        face_id = features.tostring()
         self.db.insert_face(name, face_id)
 
-    def get_embs(self):
-        embs = self.db.get_all_faces()
+    def get_faces(self):
+        faces = self.db.get_all_faces()
         face_id = []
         name = []
-        for emb in embs:
-            name.append(emb[0])
-            face_id.append(np.frombuffer(emb[1], dtype=np.float32))
+        for face in faces:
+            name.append(face[0])
+            face_id.append(np.frombuffer(face[1], dtype=np.float32))
         return name, face_id
 
-    def get_distance(self, emb, embs):
+    def get_distance(self, face, faces):
         result = []
-        for i in embs:
-            distances = self.encoder.distance(emb, i)
+        for i in faces:
+            distances = self.encoder.distance(face, i)
             result.append(distances)
         return result
 
-    def result(self, img):
-        emb = self.encoder.generate_embedding(img)
-        name, face_ids = self.get_embs()
+    def result(self, emb):
+        name, face_ids = self.get_faces()
         distance = self.get_distance(emb, face_ids)
         index = np.argmin(distance)
         return name[index], distance[index]
-
-    def generate_face_id(self, image):
-        return self.encoder.generate_embedding(image)

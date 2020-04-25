@@ -127,8 +127,8 @@ class GeneratePairs:
 
 
 if __name__ == '__main__':
-    data_dir = 'G:/data'
-    save_dir = 'G:/data-lfw'
+    data_dir = 'G:/test_160'
+    save_dir = 'G:/lfw_160'
     rename_and_resize(data_dir=data_dir, save_dir=save_dir)
     generatePairs = GeneratePairs(data_dir=save_dir)
     generatePairs.generate()

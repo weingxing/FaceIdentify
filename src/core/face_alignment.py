@@ -93,7 +93,7 @@ class Alignment:
 
 
 if __name__ == '__main__':
-    pic = './imgs/2.jpg'
+    pic = './images/2.jpg'
     centerface = CenterFace(landmarks=True)
     img = cv2.imread(pic)
     # BGR 转 RGB

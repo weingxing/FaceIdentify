@@ -6,15 +6,14 @@ from PyQt5.QtWidgets import *
 from view.main_ui import MainWindow
 from view.add_ui import AddWindow
 
-from recognition_thread import Thread
 from core.centerface import CenterFace
 from core.face_recognition import Recognition
 from core.face_alignment import Alignment
 
 recognition = Recognition()
-align = Alignment()
 # 相机编号，一般笔记本自带摄像头为 0
-CAM_NUM = 0
+# 这里使用USB连接的外置摄像头，方便识别手机上的图片
+CAM_NUM = 1
 
 
 class FirstWindow(MainWindow):
@@ -24,7 +23,6 @@ class FirstWindow(MainWindow):
         self.threshold = 0.9
         self.cap = cv2.VideoCapture()
         self.centerface = CenterFace(landmarks=True)
-        self.thread = Thread()
         self.slot_init()
         self.image = None
 
@@ -32,34 +30,49 @@ class FirstWindow(MainWindow):
     def slot_init(self):
         self.button_open_camera.clicked.connect(self.button_open_camera_click)
         self.timer_camera.timeout.connect(self.show_camera)
+        self.recognition_timer.timeout.connect(self.identify)
         self.button_add.clicked.connect(self.add)
         self.button_close.clicked.connect(self.close)
-        self.thread.signal.connect(self.write_name)
 
     def button_open_camera_click(self):
         if not self.timer_camera.isActive():
             flag = self.cap.open(CAM_NUM)
             if flag:
                 self.timer_camera.start(60)
-                self.thread.flag = True
-                self.thread.start()
+                self.recognition_timer.start(500)
                 self.button_open_camera.setText(u'结束识别')
             else:
                 print('请检查摄像头连接')
         else:
-            self.thread.flag = False
             self.timer_camera.stop()
+            self.recognition_timer.stop()
             self.cap.release()
             self.label_show_camera.clear()
 
             self.name.setText('未开始识别')
             self.button_open_camera.setText(u'开始识别')
 
-    def write_name(self, name, distance):
-        if distance < self.threshold:
-            self.name.setText(name)
+    # 识别身份
+    def identify(self):
+        align = Alignment()
+        h, w = self.image.shape[:2]
+        dets, lms = self.centerface(self.image, h, w, threshold=0.35)
+        if len(lms) != 0:
+            # 提取当前检测到的人脸的特征量
+            aligned_img = align.align_face(self.image)
+            import matplotlib.pyplot as plt
+            plt.imshow(aligned_img)
+            plt.show()
+            # name, distance = recognition.result(self.image)
+            name, distance = recognition.result(aligned_img)
+            print('姓名：%s，距离：%s' % (name, distance))
+            if distance < self.threshold:
+                self.name.setText(name)
+            else:
+                self.name.setText("不认识")
         else:
-            self.name.setText("不认识")
+            self.name.setText('没有发现人脸')
+            print("没有发现人脸")
 
     # 检测人脸
     def show_camera(self):
@@ -75,24 +88,21 @@ class FirstWindow(MainWindow):
         # 方框标出人脸用于展示
         # 只取距离摄像头最近的作为识别对象
         if len(dets) != 0:
-            self.thread.set_image(self.image)
             det = dets[0]
             boxes, score = det[:4], det[4]
             cv2.rectangle(image, (int(boxes[0]), int(boxes[1])),
                           (int(boxes[2]), int(boxes[3])), (2, 255, 0), 1)
-        else:
-            self.name.setText('没有发现人脸')
         show = cv2.resize(image, (640, 480))
+
         # 转换为Qt可以使用的图片格式
         show_image = QtGui.QImage(show.data, show.shape[1], show.shape[0], QtGui.QImage.Format_RGB888)
         # 将图片更新到界面
         self.label_show_camera.setPixmap(QtGui.QPixmap.fromImage(show_image))
 
     def add(self):
-        # 如果当前正在进行人脸识别，先停止所有工作再跳转
         if self.cap.isOpened():
             self.timer_camera.stop()
-            self.thread.flag = False
+            self.recognition_timer.stop()
             self.cap.release()
             self.label_show_camera.clear()
             self.name.setText('未开始识别')
@@ -147,8 +157,9 @@ class SecondWindow(AddWindow):
             self.cap.release()
             self.button_open_camera.setText(u'打开相机')
 
-    # 添加人脸信息
+    # 识别身份
     def add_face_id(self):
+        align = Alignment()
         name = self.name.text()
         if self.timer_camera.isActive() or self.image is None:
             QMessageBox.information(self, '提示', '请先拍摄照片')
@@ -161,7 +172,7 @@ class SecondWindow(AddWindow):
         if len(lms) != 0:
             # 对齐后提取当前检测到的人脸的特征量
             aligned_img = align.align_face(self.image)
-            recognition.add_face(name, aligned_img)
+            recognition.add_to_db(name, aligned_img)
             QMessageBox.information(self, '提示', '录入成功')
         else:
             QMessageBox.information(self, '错误', '没有检测到人脸,请重新拍摄')

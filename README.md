@@ -24,11 +24,21 @@
 最后，使用align_dataset.py对训练集和测试集进行预处理，供寻可怜模型使用。
 
 ## 训练
-为方便使用Google Colab进行训练，训练代码为Jupyter格式，修改相应的参数后训练即可。
-训练完成后的到的meta文件和checkpoint文件在使用时读取速度很慢，使用
-export_model.py将模型导出为pb文件即可快速读取。
+模型训练时使用了Google Colab和云GPU服务器，train.ipynb和train/*.py文件作用相同。
+
+train.ipynb为使用Google Colab进行训练的代码，上传至Google Drive后打开，修改相应的参数后训练即可。
+
+修改train.py的参数后也可以直接在本地运行训练（建议使用GPU训练）
+
+训练完成后的到的meta文件和checkpoint文件在使用时读取速度很慢，使用export_model.py将模型导出为pb文件即可快速读取。
 
 ## GUI
-使用PyQt5开发界面，所有视图均在[/src/view](./src/view)，
-使用MySQL对提取的人脸特征和对应的信息进行存储，使用OpenCV实时采集图像，将采集的图像进行特征向量的
-提取，然后与数据库中的信息比对，根据设置的最大距离来判断是不是同一个人。
+使用PyQt5开发界面，所有视图均在[/src/view](./src/view)，使用MySQL对提取的人脸特征和对应的信息进行存储，使用OpenCV实时采集图像，将采集的图像进行特征向量提取，然后与数据库中的信息比对，根据设置的最大距离来判断是不是同一个人。
+
+运行前先将数据库部署好（src/sql文件夹有sql文件，可直接恢复至数据库），修改好face_db.py中的连接信息，然后运行main.py即可。
+
+
+
+#### 不采用数据库的方法（代码中未进行实现）
+
+FaceNet论文中提出使用传统机器学习算法（KNN、SVM等），训练一个分类器，同时结合距离来进行人脸识别身份验证。
