@@ -21,7 +21,7 @@
 
 删除不是同一个人的图片使用百度人脸比对api进行比对处理。
 
-最后，使用align_dataset.py对训练集和测试集进行预处理，供寻可怜模型使用。
+最后，使用align_dataset.py对训练集和测试集进行预处理，供训练模型使用。
 
 ## 训练
 模型训练时使用了Google Colab和云GPU服务器，train.ipynb和train/*.py文件作用相同。
